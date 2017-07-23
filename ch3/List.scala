@@ -75,7 +75,7 @@ object List {
 	def foldRight[A, B](as: List[A], z: B)(f: (A, B) => B): B = as match {
 			case Nil => z
 			case Cons(x, xs) => f(x, foldRight(xs, z)(f))
-		}
+	}
 
 	def sum2(ns: List[Int]) = foldRight(ns, 0)((x, y) => x + y)
 
@@ -107,5 +107,96 @@ object List {
 	def concat[A](ls: List[List[A]]): List[A] =
 		foldRight(ls, Nil: List[A])(append)
 
+	def add1(l: List[Int]): List[Int] = 
+		foldRight(l, Nil:List[Int])((h, t) => Cons(h+1, t))
+
+	def doubleToString(l: List[Double]): List[String] =
+		foldRight(l, Nil:List[String])((h, t) => Cons(h.toString, t))
+
+	def map[A, B](as: List[A])(f: A => B): List[B] =
+		foldRight(as, Nil:List[B])((h, t) => Cons(f(h), t))
+
+	def map_1[A,B](l: List[A])(f: A => B): List[B] = 
+  foldRightViaFoldLeft(l, Nil:List[B])((h,t) => Cons(f(h),t))
+
+	def map_2[A,B](l: List[A])(f: A => B): List[B] = {
+	  val buf = new collection.mutable.ListBuffer[B]
+	  def go(l: List[A]): Unit = l match {
+	    case Nil => ()
+	    case Cons(h,t) => buf += f(h); go(t)
+	  }
+	  go(l)
+	  List(buf.toList: _*) // converting from the standard Scala list to the list we've defined here
+	}
+
+	def filter[A](as: List[A])(f: A => Boolean): List[A] =
+		foldRight(as, Nil:List[A])((h, t) => if(f(h)) Cons(h, t) else t)
+
+	def filter_1[A](l: List[A])(f: A => Boolean): List[A] = 
+  	foldRightViaFoldLeft(l, Nil:List[A])((h,t) => if (f(h)) Cons(h,t) else t)
+
+	def filter_2[A](l: List[A])(f: A => Boolean): List[A] = {
+	  val buf = new collection.mutable.ListBuffer[A]
+	  def go(l: List[A]): Unit = l match {
+	    case Nil => ()
+	    case Cons(h,t) => if (f(h)) buf += h; go(t)
+	  }
+	  go(l)
+	  List(buf.toList: _*) // converting from the standard Scala list to the list we've defined here
+	}
+
+	def flatMap[A, B](as: List[A])(f: A => List[B]): List[B] =
+		foldRight(as, Nil:List[B])((h, t) => append(f(h), t))
+
+	def flatMap_1[A, B](as: List[A])(f: A => List[B]): List[B] =
+		concat(map(as)(f))
+
+	def filterViaFlatMap[A](l: List[A])(f: A => Boolean): List[A] =
+  	flatMap(l)(a => if (f(a)) List(a) else Nil)
+
+  def addPairwise(a: List[Int], b: List[Int]): List[Int] = (a,b) match {
+	  case (Nil, _) => Nil
+	  case (_, Nil) => Nil
+	  case (Cons(h1,t1), Cons(h2,t2)) => Cons(h1+h2, addPairwise(t1,t2))
+	}
+
+	def zipWith[A, B, C](a: List[A], b: List[B])(f: (A, B) => C): List[C] = (a, b) match {
+		case (Nil, _) => Nil
+		case (_, Nil) => Nil
+		case (Cons(h1, t1), Cons(h2, t2)) => Cons(f(h1, h2), zipWith(t1, t2)(f))
+	}
+
+	/*
+	There's nothing particularly bad about this implementation,
+	except that it's somewhat monolithic and easy to get wrong.
+	Where possible, we prefer to assemble functions like this using
+	combinations of other functions. It makes the code more obviously
+	correct and easier to read and understand. Notice that in this
+	implementation we need special purpose logic to break out of our
+	loops early. In Chapter 5 we'll discuss ways of composing functions
+	like this from simpler components, without giving up the efficiency
+	of having the resulting functions work in one pass over the data.
+
+	It's good to specify some properties about these functions.
+	For example, do you expect these expressions to be true?
+
+	(xs append ys) startsWith xs
+	xs startsWith Nil
+	(xs append ys append zs) hasSubsequence ys
+	xs hasSubsequence Nil
+	*/
+	@annotation.tailrec
+	def startsWith[A](l: List[A], prefix: List[A]): Boolean = (l,prefix) match {
+	  case (_,Nil) => true
+	  case (Cons(h,t),Cons(h2,t2)) if h == h2 => startsWith(t, t2)
+	  case _ => false
+	}
+	
+	@annotation.tailrec
+	def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = sup match {
+	  case Nil => sub == Nil
+	  case _ if startsWith(sup, sub) => true
+	  case Cons(_,t) => hasSubsequence(t, sub)
+	}
 
 }
