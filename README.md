@@ -1,1 +1,1 @@
-# fp-in-scala-book-exo
+I'll update the exercises I've finished in the book here.
