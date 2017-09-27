@@ -16,8 +16,17 @@ sealed trait Option[+A] {
 		map(Some(_)) getOrElse ob
 
 	def filter(f: A => Boolean): Option[A] = 
-		flatMap (a => if f(a) Some(a) else None)
+		flatMap (a => if (f(a)) Some(a) else None)
+}
 
+object Option {
+	def mean(xs: Seq[Double]): Option[Double] = 
+		if (xs.isEmpty) None
+		else Some(xs.sum / xs.length)
+
+	def variance(xs: Seq[Double]): Option[Double] = {
+		mean(xs) flatMap (m => mean(xs.map(x => math.pow(x - m, 2))))
+	}
 }
 
 case class Some[+A](get: A) extends Option[A]
