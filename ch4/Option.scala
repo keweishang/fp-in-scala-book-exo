@@ -35,6 +35,14 @@ object Option {
 	def sequence[A](a: List[Option[A]]): Option[List[A]] = {
 		a.foldRight[Option[List[A]]](Some(Nil))((x, y) => map2(x, y)(_ :: _))
 	}
+
+	def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = {
+		a.foldRight[Option[List[B]]](Some(Nil))((x, acc) => map2(f(x), acc)(_ :: _))
+	}
+
+	def sequenceViaTraverse[A](a: List[Option[A]]): Option[List[A]] = {
+		traverse(a)(x => x)
+	}
 }
 
 case class Some[+A](get: A) extends Option[A]
